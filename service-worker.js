@@ -3,8 +3,7 @@ const ASSETS = [
   './',
   './index.html',
   './manifest.json',
-  './icon-192.png',
-  './images/cover.jpg', 
+  './icon-192.png', 
   './images/page1.jpg', // dagdag mo lahat ng images mo dito El HAHA
   './images/page2.jpg',
   './images/page3.jpg',
