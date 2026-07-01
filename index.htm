@@ -53,8 +53,8 @@ body { margin: 0; font-family: 'Georgia', serif; background: var(--bg); color: v
 .page { padding: 15px 15px; order: 1; }
 .top-bar { padding: 10px 15px; flex-wrap: wrap; gap: 10px; }
 .nav-right { width: 100%; justify-content: space-between; }
-.nav-right button,.toolbar-right button { padding: 12px 14px; font-size: 1rem; flex: 1; }
-.toolbar-right { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.nav-right button,.toolbar-right button { padding: 12px 14px; font-size: 1rem; }
+.toolbar-right { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; width: 100%; }
 .toolbar-right.divider { grid-column: 1 / -1; }
 .cover-page h1 { font-size: 2rem; }
 .cover-page { padding: 40px 20px; margin: 20px auto; }
