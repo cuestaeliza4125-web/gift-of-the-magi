@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Interactive eBook - The Gift of the Magi</title>
+<style>
+:root { --bg: #f4f1e8; --text: #2c2c2c; --accent: #8b4513; --card: #fffdf7; --line: #ddd; --dark-brown: #5C4033; }
+body.dark-mode { --bg: #1e1e1e; --text: #e0e0e0; --accent: #d4a373; --card: #2a2a2a; --line: #444; --dark-brown: #A0522D; }
+* { box-sizing: border-box; }
+body { margin: 0; font-family: 'Georgia', serif; background: var(--bg); color: var(--text); transition: background 0.3s, color 0.3s; }
+.ebook-container { max-width: 100%; margin: 0; padding: 10px; }
+.hidden { display: none!important; }
+.cover-page { text-align: center; padding: 60px 20px; background: var(--card); border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); max-width: 700px; margin: 40px auto; }
+.cover-page h1 { font-size: 2.5rem; margin-bottom: 10px; color: var(--accent); }
+.cover-page button { padding: 12px 24px; font-size: 1rem; background: var(--accent); color: white; border: none; border-radius: 8px; cursor: pointer; }
+.cover-img { max-width: 300px; width: 100%; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
+.book { background: var(--card); border-radius: 12px; padding: 0; box-shadow: 0 4px 20px rgba(0,0,0,0.1); min-height: calc(100vh - 20px); display: flex; flex-direction: column; }
+.top-bar { display: flex; justify-content: space-between; align-items: center; padding: 12px 25px; border-bottom: 1px solid var(--line); }
+#pageNumber { font-weight: bold; font-size: 1.1rem; }
+.nav-right { display: flex; gap: 8px; }
+.nav-right button { padding: 10px 14px; border: 1px solid var(--accent); background: transparent; color: var(--accent); border-radius: 6px; cursor: pointer; font-size: 0.9rem; white-space: nowrap; }
+.toolbar-right button { padding: 10px 14px; border: 1px solid var(--accent); background: transparent; color: var(--accent); border-radius: 6px; cursor: pointer; font-size: 0.9rem; white-space: nowrap; width: 100%; }
+.nav-right button:hover,.toolbar-right button:hover { background: var(--accent); color: white; }
+.book-body { display: flex; flex: 1; }
+.page { flex: 1; padding: 20px 25px; overflow-y: auto; }
+.sidebar-right { display: flex; flex-direction: column; gap: 15px; padding: 15px; border-left: 1px solid var(--line); width: 200px; flex-shrink: 0; overflow-y: auto; }
+.sidebar-right h3 { margin: 0; text-align: center; color: var(--accent); }
+.toolbar-right { display: flex; flex-direction: column; gap: 10px; }
+.divider { height: 1px; background: var(--line); width: 100%; margin: 5px 0; }
+.page-list { display: flex; flex-direction: column; gap: 6px; max-height: 300px; overflow-y: auto; }
+.page-list button { padding: 8px; border: 1px solid var(--line); background: transparent; color: var(--text); border-radius: 6px; cursor: pointer; font-size: 0.85rem; text-align: left; }
+.page-list button:hover,.page-list button.active { background: var(--accent); color: white; border-color: var(--accent); }
+.page-content { font-size: 18px; line-height: 1.8; white-space: pre-wrap; }
+.page-content img { max-width: 100%; border-radius: 8px; margin: 10px 0; }
+.clickable-word { color: var(--accent); border-bottom: 1px dotted var(--accent); cursor: pointer; font-weight: bold; }
+.clickable-word:hover { opacity: 0.8; }
+.progress-container { height: 6px; background: #ddd; border-radius: 0 0 12px 12px; overflow: hidden; }
+.progress-bar { height: 100%; width: 10%; background: var(--accent); transition: width 0.3s ease; }
+/* Pop-up Style - FIXED FOR MOBILE CENTER */
+.popup { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); backdrop-filter: blur(5px); display: flex; justify-content: center; align-items: center; z-index: 1000; padding: 20px; } /* DAGDAG: padding para di dumikit sa gilid */
+.popup-content { background: #ffffff; border: 3px solid #000; padding: 35px 45px; border-radius: 16px; max-width: 550px; width: 100%; position: relative; box-shadow: 0 8px 30px rgba(0,0,0,0.4); text-align: center; color: #000; box-sizing: border-box; } /* FIX: width:100% + box-sizing */
+.popup-content h2 { margin-top: 0; color: #000; font-size: clamp(2rem, 8vw, 3rem); text-transform: uppercase; letter-spacing: 2px; font-weight: 900; word-break: break-word; } /* FIX: clamp + break-word para di lumagpas yung "PLATINUM" */
+.popup-content p { font-size: 1.1rem; line-height: 1.6; margin: 15px 0; color: #000; }
+.close-btn { position: absolute; top: 15px; right: 20px; font-size: 28px; cursor: pointer; color: #000; line-height: 1; }
+#popupAudio { padding: 12px 20px; border: none; background: var(--dark-brown); color: #fff; border-radius: 8px; cursor: pointer; margin-top: 15px; font-size: 1rem; font-weight: bold; }
+#popupAudio:hover { opacity: 0.9; }
+/* ===== MOBILE RESPONSIVE ONLY - DO NOT TOUCH DESKTOP ===== */
+@media (max-width: 768px) {
+.ebook-container { padding: 5px; }
+.book-body { flex-direction: column; }
+.sidebar-right { width: 100%; border-left: none; border-top: 1px solid var(--line); padding: 15px 15px 20px 15px; max-height: none; order: 2; }
+.page { padding: 15px 15px; order: 1; }
+.top-bar { padding: 10px 15px; flex-wrap: wrap; gap: 10px; }
+.nav-right { width: 100%; justify-content: space-between; }
+.nav-right button,.toolbar-right button { padding: 12px 14px; font-size: 1rem; flex: 1; }
+.toolbar-right { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.toolbar-right.divider { grid-column: 1 / -1; }
+.cover-page h1 { font-size: 2rem; }
+.cover-page { padding: 40px 20px; margin: 20px auto; }
+.popup-content { padding: 25px 20px; } /* LESS PADDING SA MOBILE */
+}
+</style>
+</head>
+<body>
+<div class="ebook-container">
+  <div class="cover-page" id="coverPage">
+    <img src="images/cover.jpg" alt="The Gift of the Magi Cover" class="cover-img">
+    <h1>The Gift of the Magi</h1>
+    <p>by O. Henry</p>
+    <button id="startReading">Start Reading</button>
+  </div>
+  <div class="book hidden" id="book">
+    <div class="top-bar">
+      <span id="pageNumber">Page 1 / 10</span>
+      <div class="nav-right">
+        <button id="prevPage">◀ Prev</button>
+        <button id="nextPage">Next ▶</button>
+      </div>
+    </div>
+    <div class="book-body">
+      <div class="page">
+        <div id="pageContent" class="page-content"></div>
+      </div>
+      <div class="sidebar-right">
+        <div class="toolbar-right">
+          <button id="fontIncrease">A+ Increase</button>
+          <button id="fontDecrease">A- Decrease</button>
+          <div class="divider"></div>
+          <button id="darkModeToggle">🌙 Dark Mode</button>
+          <button id="fullscreenBtn">⛶ Fullscreen</button>
+          <div class="divider"></div>
+          <button id="readAloudBtn">🔊 Read Aloud</button>
+        </div>
+        <div class="divider"></div>
+        <h3>Pages</h3>
+        <div id="pageList" class="page-list"></div>
+      </div>
+    </div>
+    <div class="progress-container">
+      <div id="progressBar" class="progress-bar"></div>
+    </div>
+  </div>
+</div>
+<!-- Pop-up Dictionary -->
+<div id="popup" class="popup hidden">
+  <div class="popup-content">
+    <span id="closePopup" class="close-btn">&times;</span>
+    <h2 id="popupWord"></h2>
+    <p id="popupMeaning"></p>
+    <button id="popupAudio">🔊 Pronounce</button>
+  </div>
+</div>
+<!-- <audio id="flipSound" src="audio/pageflip.mp3"></audio> -->
+<!-- <audio id="bgMusic" src="audio/bgmusic.mp3" loop></audio> -->
+<script>
+const coverPage = document.getElementById("coverPage");
+const book = document.getElementById("book");
+const startBtn = document.getElementById("startReading");
+const prevBtn = document.getElementById("prevPage");
+const nextBtn = document.getElementById("nextPage");
+const pageNumber = document.getElementById("pageNumber");
+const pageContent = document.getElementById("pageContent");
+const progressBar = document.getElementById("progressBar");
+const fontIncrease = document.getElementById("fontIncrease");
+const fontDecrease = document.getElementById("fontDecrease");
+const darkModeToggle = document.getElementById("darkModeToggle");
+const fullscreenBtn = document.getElementById("fullscreenBtn");
+const readAloudBtn = document.getElementById("readAloudBtn");
+const pageList = document.getElementById("pageList");
+const flipSound = document.getElementById("flipSound");
+const bgMusic = document.getElementById("bgMusic");
+const popup = document.getElementById("popup");
+const closePopup = document.getElementById("closePopup");
+const popupWord = document.getElementById("popupWord");
+const popupMeaning = document.getElementById("popupMeaning");
+const popupAudio = document.getElementById("popupAudio");
+
+const pages = [
+  { text: "One dollar and eighty-seven cents. That was all. And sixty cents of it was in pennies. Pennies saved one and two at a time by bulldozing the grocer and the vegetable man and the butcher until one's cheeks burned with the silent imputation of parsimony that such close bargaining suggested.", image: "images/1.jpg" },
+  { text: "Della counted it three times. One dollar and eighty-seven cents. And the next day would be Christmas. There was nothing to do but fall on the bed and cry. So Della did it. Which instigates the moral reflection that life is made up of sobs, sniffles, and smiles, with sniffles predominating.", image: "images/2.jpg" },
+  { text: "The magi, as you know, were wise men—wonderfully wise men—who brought gifts to the Babe in the manger. They invented the art of giving Christmas presents. Being wise, their gifts were no doubt wise ones, possibly bearing the privilege of exchange in case of duplication.", image: "images/3.jpg" },
+  { text: "Magi = Wise men\nPenny = Small coin\nGaze = To look intently", image: "images/4.jpg" },
+  { text: "Jim stopped inside the door, as immovable as a setter at the scent of quail. His eyes were fixed upon Della, and there was an expression in them that she could not read, and it terrified her. It was not anger, nor surprise, nor disapproval, nor horror, nor any of the sentiments that she had been prepared for.", image: "images/5.jpg" },
+  { text: "She got out her curling irons and lighted the gas and went to work repairing the ravages made by generosity added to love. Which is always a tremendous task, dear friends—a mammoth task.", image: "images/6.jpg" },
+  { text: "Jim drew a package from his overcoat pocket and threw it upon the table. 'Don't let's quarrel about that now. I don't care,' he said. 'It's nothing to me. I sold the watch to get the money to buy your combs.'", image: "images/7.jpg" },
+  { text: "With the money, she bought a fine platinum chain for Jim's gold watch, a gift she thought worthy of him.", image: "images/8.jpg" },
+  { text: "The combs—she had coveted them for long, without the least extravagant hope of possession. They were pure tortoise shell, with jeweled rims—just the shade to wear in the beautiful vanished hair.", image: "images/9.jpg" },
+  { text: "Of all who give gifts, these two were the wisest. Of all who give and receive gifts, such as they are wisest. Everywhere they are wisest. They are the magi.", image: "images/10.jpg" }
+];
+
+const dictionary = { "platinum": "A rare, silver-white precious metal. Very valuable and used for jewelry." };
+
+let currentPage = 0;
+let fontSize = 18;
+let isReading = false;
+
+startBtn.addEventListener("click", () => {
+  coverPage.classList.add("hidden");
+  book.classList.remove("hidden");
+  bgMusic?.play().catch(()=>{});
+  currentPage = 0;
+  buildPageList();
+  renderPage();
+});
+
+function renderPage() {
+  const page = pages[currentPage];
+  let text = page.text;
+  if (currentPage === 7) {
+    text = text.replace(/platinum/g, `<span class="clickable-word" data-word="platinum">platinum</span>`);
+  }
+  let html = `<p>${text.replace(/\n/g, "<br>")}</p>`;
+  if (page.image) html += `<img src="${page.image}" alt="page image">`;
+  pageContent.innerHTML = html;
+  pageNumber.textContent = `Page ${currentPage + 1} / ${pages.length}`;
+  progressBar.style.width = `${((currentPage + 1) / pages.length) * 100}%`;
+  pageContent.style.fontSize = `${fontSize}px`;
+  flipSound?.play().catch(()=>{});
+  document.querySelectorAll(".page-list button").forEach((btn, i) => {
+    btn.classList.toggle("active", i === currentPage);
+  });
+  document.querySelectorAll(".clickable-word").forEach(word => {
+    word.addEventListener("click", () => {
+      const w = word.dataset.word;
+      showPopup(w);
+    });
+  });
+}
+
+function buildPageList() {
+  pageList.innerHTML = "";
+  pages.forEach((p, i) => {
+    const btn = document.createElement("button");
+    btn.textContent = `Page ${i + 1}`;
+    btn.addEventListener("click", () => {
+      speechSynthesis.cancel();
+      isReading = false;
+      currentPage = i;
+      renderPage();
+    });
+    pageList.appendChild(btn);
+  });
+}
+
+function showPopup(word) {
+  popupWord.textContent = word.toUpperCase();
+  popupMeaning.textContent = dictionary[word] || "No meaning found.";
+  popup.classList.remove("hidden");
+}
+
+closePopup.addEventListener("click", () => popup.classList.add("hidden"));
+popup.addEventListener("click", (e) => {
+  if (e.target === popup) popup.classList.add("hidden");
+});
+
+popupAudio.addEventListener("click", () => {
+  speechSynthesis.cancel();
+  const speech = new SpeechSynthesisUtterance(popupWord.textContent.toLowerCase());
+  speech.lang = "en-US";
+  speech.rate = 0.65;
+  speech.pitch = 1.1;
+  speech.volume = 1.5;
+  const softVoice = voices.find(v => v.name.includes("Aria") && v.lang === "en-US") || voices.find(v => v.name.includes("Google US English") && v.name.includes("Female")) || voices.find(v => v.name.includes("Female") && v.lang === "en-US") || voices.find(v => v.lang === "en-US");
+  if (softVoice) speech.voice = softVoice;
+  speechSynthesis.speak(speech);
+});
+
+function goNext() {
+  speechSynthesis.cancel();
+  isReading = false;
+  if (currentPage < pages.length - 1) {
+    currentPage++;
+    renderPage();
+  }
+}
+
+function goPrev() {
+  speechSynthesis.cancel();
+  isReading = false;
+  if (currentPage > 0) {
+    currentPage--;
+    renderPage();
+  }
+}
+
+function toggleFullscreen() {
+  if (!document.fullscreenElement) document.documentElement.requestFullscreen();
+  else document.exitFullscreen();
+}
+
+nextBtn.addEventListener("click", goNext);
+prevBtn.addEventListener("click", goPrev);
+
+fontIncrease.addEventListener("click", () => {
+  fontSize += 2;
+  renderPage();
+});
+
+fontDecrease.addEventListener("click", () => {
+  fontSize = Math.max(12, fontSize - 2);
+  renderPage();
+});
+
+darkModeToggle.addEventListener("click", () => document.body.classList.toggle("dark-mode"));
+fullscreenBtn.addEventListener("click", toggleFullscreen);
+
+let voices = [];
+function loadVoices() {
+  voices = speechSynthesis.getVoices();
+}
+speechSynthesis.onvoiceschanged = loadVoices;
+
+readAloudBtn.addEventListener("click", () => {
+  if (isReading) {
+    speechSynthesis.cancel();
+    isReading = false;
+    return;
+  }
+  speechSynthesis.cancel();
+  const text = pageContent.innerText;
+  const speech = new SpeechSynthesisUtterance(text);
+  speech.lang = "en-US";
+  speech.rate = 0.88;
+  speech.pitch = 1.4;
+  speech.volume = 1.5;
+  const youngVoice = voices.find(v => v.name.includes("Neural2-C")) || voices.find(v => v.name.toLowerCase().includes("google") && v.lang === "en-US");
+  if (youngVoice) speech.voice = youngVoice;
+  speech.onstart = () => { isReading = true; }
+  speech.onend = () => { isReading = false; }
+  speechSynthesis.speak(speech);
+});
+
+document.addEventListener("keydown", (e) => {
+  if (!popup.classList.contains("hidden") || document.activeElement.tagName === "INPUT") return;
+  if (e.key === "ArrowRight") {
+    goNext();
+  } else if (e.key === "ArrowLeft") {
+    goPrev();
+  } else if (e.key.toLowerCase() === "f") {
+    toggleFullscreen();
+  }
+});
+</script>
+</body>
+</html>
